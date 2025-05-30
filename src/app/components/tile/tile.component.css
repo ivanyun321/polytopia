@@ -1,3 +1,4 @@
+/* tile.component.css */
 .tile {
   position: absolute;
   width: 100px;
@@ -6,12 +7,14 @@
 
 .tile-image {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
 }
 
 .unit-image {
   position: absolute;
+  width: 40px;
+  height: 40px;
   top: 5px;
-  left: 15px;
-  width: 70px;
+  left: 30px;
 }

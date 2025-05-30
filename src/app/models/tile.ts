@@ -1,10 +1,8 @@
-import {Unit} from './unit';
-
-export class Tile {
-    constructor(
-        public x: number,
-        public y: number,
-        public terrainType: string,
-        public unit: Unit | null = null
-    ) {}
+export interface Tile {
+  x: number;
+  y: number;
+  terrainType: string;
+  unit?: {
+    type: string;
+  };
 }

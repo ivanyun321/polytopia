@@ -5,7 +5,7 @@ import { GameMapComponent } from './components/game-map/game-map.component';
   selector: 'app-root',
   standalone: true,
   imports: [GameMapComponent],
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.css'],
+  templateUrl: './app.html',
+  styleUrls: ['./app.css']
 })
 export class AppComponent {}

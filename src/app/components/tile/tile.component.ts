@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-tile',
   standalone: true,
-  imports: [CommonModule], // ✅ Required for *ngIf, [ngStyle]
+  imports: [CommonModule],
   templateUrl: './tile.component.html',
   styleUrls: ['./tile.component.css']
 })
@@ -14,7 +14,7 @@ export class TileComponent {
 
   get style() {
     return {
-      transform: `translate(${(this.tile.x - this.tile.y) * 50}px, ${(this.tile.x + this.tile.y) * 25}px)`,
+      transform: `translate(${(this.tile.x - this.tile.y) * 25}px, ${(this.tile.x + this.tile.y) * 15}px)`,
       zIndex: this.tile.x + this.tile.y
     };
   }

@@ -1,26 +1,15 @@
-.isometric-map {
+/* game-map.component.css */
+.map-container {
   position: relative;
   width: 100%;
   height: 100vh;
-  background-color: #222;
   overflow: hidden;
-  transform-origin: center center;
-  transform: scale(1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.map-container {
-  width: 100vw;
-  height: 100vh;
-  overflow: scroll;
-  background-color: #222;
-  position: relative;
+  background: #222;
 }
 
 .isometric-map {
-  transform-origin: top left;
-  width: max-content;
-  height: max-content;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
