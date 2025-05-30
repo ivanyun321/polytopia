@@ -36,13 +36,15 @@ export class GameMapComponent implements OnInit {
 
   @HostListener('wheel', ['$event'])
   onWheel(event: WheelEvent) {
-    if (event.ctrlKey) {
-      event.preventDefault();
-      const delta = event.deltaY;
-      this.zoomLevel += delta > 0 ? -0.1 : 0.1;
-      this.zoomLevel = Math.max(0.5, Math.min(2, this.zoomLevel)); // Clamp
-    }
+  const isPinchGesture = event.ctrlKey || (event.deltaMode === 0 && Math.abs(event.deltaY) < 100);
+  if (isPinchGesture) {
+    event.preventDefault();
+    const delta = event.deltaY;
+    this.zoomLevel += delta > 0 ? -0.05 : 0.05;
+    this.zoomLevel = Math.max(0.5, Math.min(2, this.zoomLevel));
   }
+}
+
 
   @HostListener('document:mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
