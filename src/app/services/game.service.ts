@@ -10,9 +10,9 @@ export class GameService {
     const terrain = ['Field'];
     const map: Tile[][] = [];
 
-    for (let y = 0; y < 11; y++) {
+    for (let y = 0; y < 15; y++) {
       const row: Tile[] = [];
-      for (let x = 0; x < 11; x++) {
+      for (let x = 0; x < 15; x++) {
         row.push({
           x,
           y,

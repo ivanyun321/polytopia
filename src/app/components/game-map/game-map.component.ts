@@ -41,7 +41,7 @@ export class GameMapComponent implements OnInit {
     event.preventDefault();
     const delta = event.deltaY;
     this.zoomLevel += delta > 0 ? -0.05 : 0.05;
-    this.zoomLevel = Math.max(0.5, Math.min(2, this.zoomLevel));
+    this.zoomLevel = Math.max(0.25, Math.min(2, this.zoomLevel));
   }
 }
 
