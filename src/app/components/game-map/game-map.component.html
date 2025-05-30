@@ -1,3 +1,7 @@
-<div class="isometric-map">
-  <app-tile *ngFor="let tile of tileList" [tile]="tile"></app-tile>
+<div class="map-container">
+  <div
+    class="isometric-map"
+    [style.transform]="'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ')'">
+    <app-tile *ngFor="let tile of tileList" [tile]="tile"></app-tile>
+  </div>
 </div>
