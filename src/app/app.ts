@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { GameMapComponent } from './components/game-map/game-map.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  standalone: true,
+  imports: [GameMapComponent],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.css'],
 })
-export class App {
-  protected title = 'polytopia-angular';
-}
+export class AppComponent {}

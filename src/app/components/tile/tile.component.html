@@ -1,0 +1,5 @@
+<div class="tile" [ngStyle]="style">
+  <img [src]="getTileImage()" class="tile-image" />
+  <img *ngIf="tile.unit" [src]="getUnitImage()" class="unit-image" />
+</div>
+
