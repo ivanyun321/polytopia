@@ -1,0 +1,31 @@
+<!-- src/app/app.html -->
+
+<div class="tracker">
+  <p>Mouse X/Y: {{ mouseX }} / {{ mouseY }}</p>
+  <p>Hovering: {{ hoverTag }}</p>
+</div>
+
+<!-- THE NEW SCROLLABLE & ZOOMABLE VIEWPORT -->
+<div
+  class="viewport"
+  (wheel)="onWheel($event)"
+  (mousedown)="onMouseDown($event)"
+  (document:mouseup)="onMouseUp()"
+  (document:mousemove)="onMouseMove($event)"
+  #viewportRef
+>
+  <div
+    class="map-container"
+    [style.transform]="mapTransform"
+  >
+    <img
+      *ngFor="let tile of hexTiles"
+      [src]="tile.imgUrl"
+      class="hex-tile"
+      [style.left.px]="tile.screenX"
+      [style.top.px]="tile.screenY"
+      (click)="onHexClick(tile)"
+      alt="{{ tile.terrain }} hex at ({{ tile.q }}, {{ tile.r }})"
+    />
+  </div>
+</div>

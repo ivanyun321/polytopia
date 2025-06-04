@@ -1,0 +1,52 @@
+/* src/app/app.css */
+
+/* 1) Tracker overlay: unchanged */
+.tracker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: monospace;
+  z-index: 10000;
+  pointer-events: none;
+  border-radius: 0 0 4px 0;
+}
+
+/* 2) Viewport (new): scrollable container for the map */
+.viewport {
+  position: absolute;      /* so it sits below the tracker */
+  top: 0;
+  left: 0;
+  width: 100vw;            /* full viewport width */
+  height: 100vh;           /* full viewport height */
+  overflow: scroll;        /* enables scrollbars */
+  cursor: grab;            /* indicates you can drag-pan */
+}
+
+/* When actively dragging, change cursor to “grabbing” */
+.viewport:active {
+  cursor: grabbing;
+}
+
+/* 3) Map‐container: the inner div that we transform (scale + translate) */
+.map-container {
+  position: relative;   /* its children (.hex-tile) are absolutely positioned */
+  transform-origin: 0 0; /* scale/translate around top-left corner */
+  /* We do NOT fix width/height here—because scaling may enlarge it */
+}
+
+/* 4) Each tile image (diamond) */
+.hex-tile {
+  position: absolute;
+  width: 100px;   /* must match tileWidth in TS */
+  height: 50px;   /* must match tileHeight in TS */
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.hex-tile:hover {
+  transform: translateY(-4px);
+  z-index: 10;
+}
