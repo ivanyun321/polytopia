@@ -1,31 +1,53 @@
-<!-- src/app/app.html -->
-
-<div class="tracker">
-  <p>Mouse X/Y: {{ mouseX }} / {{ mouseY }}</p>
-  <p>Hovering: {{ hoverTag }}</p>
-</div>
-
-<!-- THE NEW SCROLLABLE & ZOOMABLE VIEWPORT -->
+<!-- Wrapper for pan+zoom -->
 <div
   class="viewport"
   (wheel)="onWheel($event)"
   (mousedown)="onMouseDown($event)"
   (document:mouseup)="onMouseUp()"
   (document:mousemove)="onMouseMove($event)"
-  #viewportRef
 >
-  <div
-    class="map-container"
-    [style.transform]="mapTransform"
-  >
+  <div class="map-container" [style.transform]="mapTransform">
+    <!-- 1) Base tiles -->
     <img
       *ngFor="let tile of hexTiles"
       [src]="tile.imgUrl"
       class="hex-tile"
+      draggable="false"
+      (dragstart)="$event.preventDefault()"
       [style.left.px]="tile.screenX"
       [style.top.px]="tile.screenY"
-      (click)="onHexClick(tile)"
-      alt="{{ tile.terrain }} hex at ({{ tile.q }}, {{ tile.r }})"
+      alt="{{ tile.terrain }} ({{tile.q}},{{tile.r}})"
     />
+
+    <!-- 2) Territory borders as smooth dashed paths -->
+    <svg
+      class="border-layer"
+      [attr.width]="(mapWidth + mapHeight)*(tileWidth/2)"
+      [attr.height]="(mapWidth + mapHeight)*(tileHeight/2) + tileHeight"
+      style="position:absolute; left:0; top:0; pointer-events:none"
+    >
+      <path
+        *ngFor="let bp of borderPaths"
+        [attr.d]="bp.d"
+        [attr.stroke]="bp.owner"
+        fill="none"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-dasharray="20,10"
+      />
+    </svg>
+
+    <!-- 3) Single capital icon per capital -->
+    <ng-container *ngFor="let tile of hexTiles">
+      <img
+        *ngIf="tile.isCapital"
+        src="assets/icons/capital.png"
+        class="capital-icon"
+        [style.left.px]="tile.screenX"
+        [style.top.px]="tile.screenY"
+        alt="Capital"
+      />
+    </ng-container>
   </div>
 </div>
