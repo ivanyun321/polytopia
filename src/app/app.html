@@ -36,8 +36,8 @@
     <!-- 2) Border segments hugging tile edges -->
     <svg
       class="border-layer"
-      [attr.width]="(mapWidth+mapHeight)*(tileWidth/2)"
-      [attr.height]="(mapWidth+mapHeight)*(tileHeight*0.75) + tileHeight"
+      [attr.width]="(mapWidth + mapHeight) * (tileWidth / 2)"
+      [attr.height]="(mapWidth + mapHeight) * (tileHeight * 0.75) + tileHeight"
       style="position:absolute; top:0; left:0; pointer-events:none;"
     >
       <line
@@ -58,7 +58,7 @@
         src="assets/icons/capital.png"
         class="capital-icon"
         [style.left.px]="tile.screenX + tileWidth/2"
-        [style.top.px]="tile.screenY + tileHeight*0.75"
+        [style.top.px]="tile.screenY + tileHeight * 0.75"
         alt="Capital"
       />
     </ng-container>

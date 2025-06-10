@@ -1,41 +1,54 @@
 /* Viewport for pan & zoom */
 .viewport {
-  position: absolute; top:0; left:0;
-  width:100vw; height:100vh;
-  overflow:hidden;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
   cursor: grab;
-  user-select:none;
+  user-select: none;
 }
-.viewport:active { cursor: grabbing; }
+.viewport:active {
+  cursor: grabbing;
+}
 
-/* Mouse tracker overlay */
+/* Tracker overlay */
 .tracker {
-  position: fixed; top:8px; left:8px;
+  position: fixed;
+  top: 8px; left: 8px;
   background: rgba(0,0,0,0.6);
-  color: white; padding:6px 10px;
-  border-radius:4px; font-family:sans-serif;
-  z-index:50;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: sans-serif;
+  z-index: 50;
 }
 
-/* Isometric map wrapper */
+/* Map container */
 .map-container {
   position: relative;
   transform-origin: 0 0;
 }
 
-/* Grass tile images */
+/* Grass tile images (100×20 px) */
 .hex-tile {
   position: absolute;
   width: 100px;
-  height: 50px;
+  height: 35px;
+  user-select: none;
 }
 
-/* Dashed border overlay */
+/* Border segments exactly on edges */
 .border-layer {
   z-index: 10;
 }
+.border-segment {
+  stroke-width: 6;
+  stroke-dasharray: 20,10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
-/* Single generic capital icon, centered */
+/* Capital icon (centered) */
 .capital-icon {
   position: absolute;
   width: 30px;
