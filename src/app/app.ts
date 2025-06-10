@@ -1,201 +1,150 @@
+// src/app/app.ts
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface HexTile {
   q: number;
   r: number;
-  terrain: 'grass';       // only grass for now
-  owner: string;         // 'neutral', 'red', 'blue'
-  isCapital: boolean;    // true only for the two capitals
+  terrain: 'grass';
+  owner: 'neutral' | 'red' | 'blue';
+  isCapital: boolean;
   screenX: number;
   screenY: number;
   imgUrl: string;
 }
 
-interface BorderEdge {
-  owner: string;
-  x1: number; y1: number;
-  x2: number; y2: number;
-}
-
-interface BorderPath {
-  owner: string;
-  d: string;  // SVG path data
+interface BorderSegment {
+  owner: 'neutral' | 'red' | 'blue';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 }
 
 @Component({
   selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
-  standalone: true,
-  imports: [CommonModule]
 })
 export class App implements OnInit {
-  // Map dimensions
   mapWidth = 15;
   mapHeight = 15;
-
-  // Tile size (must match your 100×30 PNG)
   tileWidth = 100;
-  tileHeight = 30;
+  tileHeight = 20;
 
-  // The array of tiles
   hexTiles: HexTile[] = [];
+  borderSegments: BorderSegment[] = [];
 
-  // Border paths (one continuous dashed path per owner)
-  borderPaths: BorderPath[] = [];
+  panX = 0; panY = 0; zoomLevel = 1;
+  private isPanning = false;
+  private lastX = 0; private lastY = 0;
 
-  // Pan & Zoom state
-  zoomLevel = 1;
-  panX = 0;
-  panY = 0;
-  isPanning = false;
-  lastMouseX = 0;
-  lastMouseY = 0;
+  mouseX = 0; mouseY = 0;
+  hoveredTile: HexTile | null = null;
 
-  ngOnInit(): void {
-    this.generateIsoMap();
+  ngOnInit() {
+    this.generateMap();
   }
 
-  /** Distance in axial coords */
-  private hexDistance(q1: number, r1: number, q2: number, r2: number) {
-    const dx = q1 - q2, dz = r1 - r2, dy = -dx - dz;
-    return (Math.abs(dx) + Math.abs(dy) + Math.abs(dz)) / 2;
-  }
-
-  generateIsoMap() {
-    // 1) pick one random capital
+  private generateMap() {
     const capQ = Math.floor(Math.random() * this.mapWidth);
     const capR = Math.floor(Math.random() * this.mapHeight);
-    // 2) mirror it
     const mirQ = this.mapWidth - 1 - capQ;
     const mirR = this.mapHeight - 1 - capR;
 
-    // 3) build all tiles
+    // Initialize neutral tiles
     for (let r = 0; r < this.mapHeight; r++) {
       for (let q = 0; q < this.mapWidth; q++) {
         this.hexTiles.push({
           q, r,
-          terrain: 'grass',
-          owner: 'neutral',
-          isCapital: false,
+          terrain: 'grass', owner: 'neutral', isCapital: false,
           screenX: (q - r) * (this.tileWidth / 2),
-          screenY: (q + r) * (this.tileHeight / 2),
-          imgUrl: `assets/tiles/grass.png`
+          screenY: (q + r) * (this.tileHeight * 0.75),
+          imgUrl: 'assets/tiles/grass.png',
         });
       }
     }
 
-    // 4) mark radius‐1 clusters
-    const capitals = [
-      { owner: 'red',  q: capQ, r: capR },
-      { owner: 'blue', q: mirQ, r: mirR }
+    // Mark radius-2 clusters around each capital
+    const seeds = [
+      { owner: 'red' as const,  q: capQ, r: capR },
+      { owner: 'blue' as const, q: mirQ, r: mirR }
     ];
-    for (const { owner, q: cQ, r: cR } of capitals) {
+    for (const { owner, q: cQ, r: cR } of seeds) {
       for (const tile of this.hexTiles) {
-        if (this.hexDistance(tile.q, tile.r, cQ, cR) <= 1) {
+        if (this.hexDistance(tile.q, tile.r, cQ, cR) <= 2) {
           tile.owner = owner;
-          if (tile.q === cQ && tile.r === cR) {
-            tile.isCapital = true;
+          if (tile.q === cQ && tile.r === cR) tile.isCapital = true;
+        }
+      }
+    }
+
+    this.buildBorderSegments();
+  }
+
+  private hexDistance(q1: number, r1: number, q2: number, r2: number): number {
+    const dx = q1 - q2, dz = r1 - r2, dy = -dx - dz;
+    return (Math.abs(dx) + Math.abs(dy) + Math.abs(dz)) / 2;
+  }
+
+  /** Generate border edges for each cluster tile face */
+  private buildBorderSegments() {
+    this.borderSegments = [];
+    // neighbor offsets and corner indices
+    const dirs: Array<{dq:number,dr:number,c1:number,c2:number}> = [
+      {dq:1, dr:0,  c1:0, c2:1},  // NE
+      {dq:0, dr:-1, c1:1, c2:2},  // N
+      {dq:-1,dr:-1, c1:2, c2:3},  // NW
+      {dq:-1,dr:0,  c1:3, c2:4},  // SW
+      {dq:0, dr:1,  c1:4, c2:5},  // S
+      {dq:1, dr:1,  c1:5, c2:0},  // SE
+    ];
+
+    for (const tile of this.hexTiles.filter(t => t.isCapital)) {
+      const owner = tile.owner;
+      const cluster = this.hexTiles.filter(t => t.owner === owner);
+
+      for (const t of cluster) {
+        const corners = this.getCorners(t);
+        for (const {dq, dr, c1, c2} of dirs) {
+          const nb = this.hexTiles.find(x => x.q===t.q+dq && x.r===t.r+dr);
+          if (!nb || nb.owner !== owner) {
+            const [x1,y1] = corners[c1];
+            const [x2,y2] = corners[c2];
+            this.borderSegments.push({owner,x1,y1,x2,y2});
           }
         }
       }
     }
-
-    // 5) build continuous border paths
-    this.makeBorderPaths();
   }
 
-  /** Stitch outer edges into smooth dashed SVG paths */
-  private makeBorderPaths() {
-    const halfW = this.tileWidth / 2;
-    const halfH = this.tileHeight / 2;
-    const findTile = (q: number, r: number) =>
-      this.hexTiles.find(t => t.q === q && t.r === r);
-
-    // collect all outer edges
-    const edges: BorderEdge[] = [];
-    for (const t of this.hexTiles) {
-      if (t.owner === 'neutral') continue;
-      const owner = t.owner;
-      const candidates = [
-        { dq:1, dr:0,  p1:[t.screenX,      t.screenY-halfH], p2:[t.screenX+halfW, t.screenY    ] },
-        { dq:0, dr:1,  p1:[t.screenX+halfW, t.screenY     ], p2:[t.screenX,      t.screenY+halfH] },
-        { dq:-1,dr:0,  p1:[t.screenX,      t.screenY+halfH], p2:[t.screenX-halfW, t.screenY    ] },
-        { dq:0, dr:-1, p1:[t.screenX-halfW, t.screenY     ], p2:[t.screenX,      t.screenY-halfH] }
-      ];
-      for (const e of candidates) {
-        const nb = findTile(t.q + e.dq, t.r + e.dr);
-        if (!nb || nb.owner !== owner) {
-          edges.push({ owner, x1:e.p1[0], y1:e.p1[1], x2:e.p2[0], y2:e.p2[1] });
-        }
-      }
-    }
-
-    // group by owner
-    const byOwner = new Map<string, BorderEdge[]>();
-    for (const e of edges) {
-      (byOwner.get(e.owner) || byOwner.set(e.owner, []).get(e.owner)!).push(e);
-    }
-
-    this.borderPaths = [];
-    // stitch each owner’s edges
-    for (const [owner, list] of byOwner.entries()) {
-      if (!list.length) continue;
-      const pts: [number,number][] = [];
-      // start with first edge
-      let e = list.shift()!;
-      pts.push([e.x1,e.y1],[e.x2,e.y2]);
-      // chain remaining
-      while (list.length) {
-        const last = pts[pts.length-1];
-        const idx = list.findIndex(ed =>
-          (ed.x1===last[0]&&ed.y1===last[1]) || (ed.x2===last[0]&&ed.y2===last[1])
-        );
-        if (idx<0) break;
-        const next = list.splice(idx,1)[0];
-        if (next.x1===last[0]&&next.y1===last[1]) {
-          pts.push([next.x2,next.y2]);
-        } else {
-          pts.push([next.x1,next.y1]);
-        }
-      }
-      // build d string
-      const d = pts.map((pt,i)=>(i? 'L':'M')+pt[0]+' '+pt[1]).join(' ') + ' Z';
-      this.borderPaths.push({ owner, d });
-    }
+  private getCorners(tile: HexTile): [number, number][] {
+    const cx = tile.screenX + this.tileWidth/2;
+    const cy = tile.screenY + this.tileHeight*0.75;
+    const w2 = this.tileWidth/2;
+    const h2 = this.tileHeight/4;  // quarter height for edge
+    return [
+      [cx + w2, cy      ], // NE
+      [cx,      cy - h2 ], // N
+      [cx - w2, cy      ], // NW
+      [cx - w2, cy + h2 ], // SW
+      [cx,      cy + 2*h2],// S
+      [cx + w2, cy + h2 ], // SE
+    ];
   }
 
-  // ───────────────────────────────────────────
-  // Pan & Zoom handlers
-  // ───────────────────────────────────────────
-  get mapTransform() {
-    return `translate(${this.panX}px, ${this.panY}px) scale(${this.zoomLevel})`;
+  // Pan & zoom
+  get mapTransform() { return `translate(${this.panX}px,${this.panY}px) scale(${this.zoomLevel})`; }
+  onWheel(e:WheelEvent){e.preventDefault();const dz=e.deltaY<0?0.1:-0.1;this.zoomLevel=Math.max(0.2,Math.min(3,this.zoomLevel+dz));}
+  onMouseDown(e:MouseEvent){e.preventDefault();this.isPanning=true;this.lastX=e.clientX;this.lastY=e.clientY;}
+  @HostListener('document:mouseup') onMouseUp(){this.isPanning=false;}
+  @HostListener('document:mousemove', ['$event']) onMouseMove(e:MouseEvent){
+    if(this.isPanning){this.panX+=e.clientX-this.lastX;this.panY+=e.clientY-this.lastY;this.lastX=e.clientX;this.lastY=e.clientY;}
+    this.mouseX=e.clientX;this.mouseY=e.clientY;
   }
-  onWheel(event: WheelEvent) {
-    event.preventDefault();
-    const delta = event.deltaY < 0 ? 0.1 : -0.1;
-    this.zoomLevel = Math.min(3, Math.max(0.2, this.zoomLevel+delta));
-  }
-  onMouseDown(event: MouseEvent) {
-    event.preventDefault();
-    this.isPanning = true;
-    this.lastMouseX = event.clientX;
-    this.lastMouseY = event.clientY;
-  }
-  onMouseMove(event: MouseEvent) {
-    if (!this.isPanning) return;
-    const dx = event.clientX - this.lastMouseX;
-    const dy = event.clientY - this.lastMouseY;
-    this.panX += dx;
-    this.panY += dy;
-    this.lastMouseX = event.clientX;
-    this.lastMouseY = event.clientY;
-  }
-  onMouseUp() { this.isPanning = false; }
 
-  @HostListener('document:mousemove', ['$event'])
-  trackMouse(event: MouseEvent) {
-    // optional overlay tracking
-  }
+  onTileMouseEnter(t:HexTile){this.hoveredTile=t;}
+  onTileMouseLeave(t:HexTile){if(this.hoveredTile===t)this.hoveredTile=null;}
 }

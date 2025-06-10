@@ -1,13 +1,25 @@
-<!-- Wrapper for pan+zoom -->
+<!-- src/app/app.html -->
 <div
   class="viewport"
   (wheel)="onWheel($event)"
   (mousedown)="onMouseDown($event)"
-  (document:mouseup)="onMouseUp()"
-  (document:mousemove)="onMouseMove($event)"
 >
+  <!-- Tracker overlay -->
+  <div class="tracker">
+    <p>Mouse: {{mouseX}} / {{mouseY}}</p>
+    <p>
+      Hover: 
+      <ng-container *ngIf="hoveredTile; else none">
+        ({{hoveredTile.q}},{{hoveredTile.r}})
+      </ng-container>
+      <ng-template #none>—</ng-template>
+    </p>
+  </div>
+
+  <!-- Map container with pan/zoom transform -->
   <div class="map-container" [style.transform]="mapTransform">
-    <!-- 1) Base tiles -->
+
+    <!-- 1) Grass tiles -->
     <img
       *ngFor="let tile of hexTiles"
       [src]="tile.imgUrl"
@@ -16,36 +28,37 @@
       (dragstart)="$event.preventDefault()"
       [style.left.px]="tile.screenX"
       [style.top.px]="tile.screenY"
-      alt="{{ tile.terrain }} ({{tile.q}},{{tile.r}})"
+      (mouseenter)="onTileMouseEnter(tile)"
+      (mouseleave)="onTileMouseLeave(tile)"
+      alt="grass ({{tile.q}},{{tile.r}})"
     />
 
-    <!-- 2) Territory borders as smooth dashed paths -->
+    <!-- 2) Border segments hugging tile edges -->
     <svg
       class="border-layer"
-      [attr.width]="(mapWidth + mapHeight)*(tileWidth/2)"
-      [attr.height]="(mapWidth + mapHeight)*(tileHeight/2) + tileHeight"
-      style="position:absolute; left:0; top:0; pointer-events:none"
+      [attr.width]="(mapWidth+mapHeight)*(tileWidth/2)"
+      [attr.height]="(mapWidth+mapHeight)*(tileHeight*0.75) + tileHeight"
+      style="position:absolute; top:0; left:0; pointer-events:none;"
     >
-      <path
-        *ngFor="let bp of borderPaths"
-        [attr.d]="bp.d"
-        [attr.stroke]="bp.owner"
-        fill="none"
-        stroke-width="6"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-dasharray="20,10"
+      <line
+        *ngFor="let seg of borderSegments"
+        [attr.x1]="seg.x1"
+        [attr.y1]="seg.y1"
+        [attr.x2]="seg.x2"
+        [attr.y2]="seg.y2"
+        [attr.stroke]="seg.owner"
+        class="border-segment"
       />
     </svg>
 
-    <!-- 3) Single capital icon per capital -->
+    <!-- 3) Capital icons -->
     <ng-container *ngFor="let tile of hexTiles">
       <img
         *ngIf="tile.isCapital"
         src="assets/icons/capital.png"
         class="capital-icon"
-        [style.left.px]="tile.screenX"
-        [style.top.px]="tile.screenY"
+        [style.left.px]="tile.screenX + tileWidth/2"
+        [style.top.px]="tile.screenY + tileHeight*0.75"
         alt="Capital"
       />
     </ng-container>

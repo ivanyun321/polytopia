@@ -1,41 +1,47 @@
-/* Pan & zoom viewport */
+/* Viewport for pan & zoom */
 .viewport {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: scroll;
+  position: absolute; top:0; left:0;
+  width:100vw; height:100vh;
+  overflow:hidden;
   cursor: grab;
+  user-select:none;
 }
-.viewport:active {
-  cursor: grabbing;
+.viewport:active { cursor: grabbing; }
+
+/* Mouse tracker overlay */
+.tracker {
+  position: fixed; top:8px; left:8px;
+  background: rgba(0,0,0,0.6);
+  color: white; padding:6px 10px;
+  border-radius:4px; font-family:sans-serif;
+  z-index:50;
 }
 
-/* The tile grid wrapper (transformed by pan/zoom) */
+/* Isometric map wrapper */
 .map-container {
   position: relative;
   transform-origin: 0 0;
 }
 
-/* Base hex‐tile images */
+/* Grass tile images */
 .hex-tile {
   position: absolute;
   width: 100px;
   height: 50px;
-  user-select: none;
-  pointer-events: auto;
 }
 
-/* Border overlay */
+/* Dashed border overlay */
 .border-layer {
   z-index: 10;
 }
 
-/* Capital icon, centered on tile midpoint */
+/* Single generic capital icon, centered */
 .capital-icon {
   position: absolute;
   width: 30px;
   height: auto;
   pointer-events: none;
   z-index: 20;
+  transform-origin: 50% 50%;
+  transform: translate(-50%, -50%);
 }
